@@ -12,8 +12,8 @@ class Player:
     self.velocity = velocity
 
   def render(self):
-    rect_body = (self.x, self.y, self.width, self.height)
-    pygame.draw.rect(self.screen, self.color, rect_body, 1)
+    self.rect_body = pygame.Rect(self.x, self.y, self.width, self.height)
+    pygame.draw.rect(self.screen, self.color, self.rect_body, 1)
     rect_gun = (2*self.x + self.width)/2 - 1, self.y, 2, self.height
     pygame.draw.rect(self.screen, self.color, rect_gun, 2)
 
@@ -25,5 +25,8 @@ class Player:
   
   def shoot(self, direction):
     bulletX = (2*self.x + self.width)/2 - 1
-    return Bullet(bulletX, self.y, self.screen, self.color, direction, 10)
-    
+    return Bullet(bulletX, self.y, self.screen, self.color, direction, 5)
+  
+  #returns True if bullet has shot the player and false otherwise
+  def isShot(self, bullet):
+    return self.rect_body.colliderect(bullet.getRect())

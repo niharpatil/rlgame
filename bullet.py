@@ -8,11 +8,15 @@ class Bullet:
     self.color = color
     self.direction = direction
     self.velocity = velocity
+    self.rect = pygame.Rect(self.x, self.y, 5,5)
 
   def render(self):
     self.y = self.y - self.velocity if self.direction == "UP" else self.y + self.velocity
-    rect = (self.x, self.y, 5,5)
-    pygame.draw.rect(self.screen, self.color, rect,2)
+    self.rect = pygame.Rect(self.x, self.y, 3,3)
+    pygame.draw.rect(self.screen, self.color, self.rect, 4)
   
   def getY(self):
     return self.y
+
+  def getRect(self):
+    return self.rect
