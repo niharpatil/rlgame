@@ -15,7 +15,7 @@ def custom_loss(y_true,y_pred):
 class AIAgent(Player):
   def setupNet(self):
     self.model = Sequential([
-        Dense(200, input_dim=100**2),
+        Dense(60, input_dim=100**2),
         Activation('relu'),
         Dense(1),
         Activation('sigmoid'),
@@ -32,15 +32,15 @@ class AIAgent(Player):
     train_x = []
     train_y = []
     for hist, times_hit in episode:
-      game_states_temp = list(map(lambda x: x[0], hist))
+      game_states_temp = np.array(list(map(lambda x: x[0], hist)))
       game_states = []
-      for i in range(0,len(game_states)-1):
-        game_states = game_states_temp[i+1] - game_states_temp[i]
+      for i in range(0,len(game_states_temp)-1):
+        game_states = game_states + [game_states_temp[i+1] - game_states_temp[i]]
       if(len(train_x) == 0):
         train_x = game_states
       else:
         train_x = np.vstack([train_x,game_states])
-      train_y = np.append(train_y,np.array([-1 * times_hit for tup in hist]))
+      train_y = np.append(train_y,np.array([-1 * times_hit for tup in range(len(hist)-1)]))
     self.model.train_on_batch(train_x,train_y)
     self.model.save('models/model'+str(ep_num))
   

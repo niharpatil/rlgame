@@ -46,7 +46,8 @@ games = []
 def resetPositions(p1,p2):
   p1.x = width/2
   p2.x = width/2
-  
+
+laststate = np.zeros(100**2)
 while 1:
   keys = pygame.key.get_pressed()
   for event in pygame.event.get():
@@ -83,7 +84,8 @@ while 1:
 
   pygame.display.flip()
   game_state = helpers.getGameStateArray(screen)
-  move = p2.makeSmartMove(game_state)
+  move = p2.makeSmartMove(np.array([game_state[0] - laststate]))
+  laststate = game_state[0]
   history = history + [(game_state[0], move)]
 
   if time.time() - oldtime >= 3:
@@ -93,7 +95,7 @@ while 1:
     # Train the neural network on batches of 20 games
     if game % 30 == 0:
       p2.trainOnEpisode(games, int(game/30))
-      np.save("history/episode" + str(game/30), games)
+      np.save("history/episode" + str(int(game/30)), games)
       games = []
     history = []
     game += 1
