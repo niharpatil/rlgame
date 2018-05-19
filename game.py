@@ -4,6 +4,7 @@ from heuristic_player import HeuristicPlayer
 from AIAgent import AIAgent
 import helpers
 import numpy as np
+import time
 
 pygame.init()
 pygame.display.init()
@@ -16,7 +17,7 @@ RED = (255,0,0)
 GREEN = (0,255,0)
 BLACK = (0, 0, 0)
 
-player_width = 20
+player_width = 15
 player_height = 10
 
 p1_pos = width/2
@@ -39,6 +40,13 @@ p2Hits = 0
   
 history = []
 
+oldtime = time.time()
+game = 1
+games = []
+def resetPositions(p1,p2):
+  p1.x = width/2
+  p2.x = width/2
+  
 while 1:
   keys = pygame.key.get_pressed()
   for event in pygame.event.get():
@@ -74,10 +82,19 @@ while 1:
     bullet.render()
 
   pygame.display.flip()
-  history = history + [helpers.getGameStateArray(screen)]
-  p2.makeSmartMove(history[-1])
-  
-  if p1Hits >= 3 or p2Hits >= 3:
+  game_state = helpers.getGameStateArray(screen)
+  move = p2.makeSmartMove(game_state)
+  history = history + [(game_state[0], move)]
+
+  if time.time() - oldtime >= 3:
+    oldtime = time.time()
     history = history[:len(history) - 1]
-    np.save("history", history)
-    sys.exit()
+    games = games + [(history, p1Hits)]
+    # Train the neural network on batches of 20 games
+    if game % 30 == 0:
+      p2.trainOnEpisode(games, int(game/30))
+      np.save("history/episode" + str(game/30), games)
+      games = []
+    history = []
+    game += 1
+    resetPositions(p1,p2)

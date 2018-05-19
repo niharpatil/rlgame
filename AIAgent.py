@@ -4,20 +4,18 @@ from player import Player
 import numpy as np
 from keras import backend as K
 import tensorflow as tf
+from functools import reduce
 
 def custom_loss(y_true,y_pred):
-  A = abs(y_pred[0])
-  #indicates good or bad game
-  if y_pred[0]/A != y_true[0]:
-    return K.sum(tf.map_fn(lambda x: -1 * x , K.log(y_pred)))
-  else: 
-    return K.sum(K.log(y_pred))
+  A = y_true
+  #indicates good or bad game depending on if A is negative or positive
+  return A * K.log(y_pred)
 
 
 class AIAgent(Player):
   def setupNet(self):
     self.model = Sequential([
-        Dense(200, input_shape=(100**2,)),
+        Dense(200, input_dim=100**2),
         Activation('relu'),
         Dense(1),
         Activation('sigmoid'),
@@ -27,12 +25,24 @@ class AIAgent(Player):
                   loss=custom_loss,
                   metrics=['accuracy'])
 
-  def trainOnEpisode(self, episode):
-    #episode is a list of 20 tuples (game_history_array, #times_hit)
+  def trainOnEpisode(self, episode,ep_num):
+    #episode is a list of 30 tuples [(game_history_array, #times_hit)]
     #game_history_array is a list of tuples (game_state, action_sampled)
     #need to compute differences --> let loss = #times_hit
-    
-    pass
+    train_x = []
+    train_y = []
+    for hist, times_hit in episode:
+      game_states_temp = list(map(lambda x: x[0], hist))
+      game_states = []
+      for i in range(0,len(game_states)-1):
+        game_states = game_states_temp[i+1] - game_states_temp[i]
+      if(len(train_x) == 0):
+        train_x = game_states
+      else:
+        train_x = np.vstack([train_x,game_states])
+      train_y = np.append(train_y,np.array([-1 * times_hit for tup in hist]))
+    self.model.train_on_batch(train_x,train_y)
+    self.model.save('models/model'+str(ep_num))
   
   def makeSmartMove(self, screenshot):
     pred = self.model.predict(screenshot)[0][0]
